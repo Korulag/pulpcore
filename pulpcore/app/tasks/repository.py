@@ -11,6 +11,7 @@ from rest_framework.serializers import ValidationError
 from pulpcore.app import models
 from pulpcore.app.models import ProgressReport
 from pulpcore.app.util import get_domain
+from pulpcore.plugin.repo_version_utils import remove_duplicates
 
 log = getLogger(__name__)
 
@@ -222,4 +223,5 @@ def add_and_remove(repository_pk, add_content_units, remove_content_units, base_
 
     with repository.new_version(base_version=base_version) as new_version:
         new_version.remove_content(models.Content.objects.filter(pk__in=remove_content_units))
+        remove_duplicates(new_version)
         new_version.add_content(models.Content.objects.filter(pk__in=add_content_units))

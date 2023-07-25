@@ -171,13 +171,14 @@ def get_view_name_for_model(model_obj, view_action):
         model_obj = model_obj.cast()
     viewset = get_viewset_for_model(model_obj)
 
+    pattern = ''
     # return the complete view name, joining the registered viewset base name with
     # the requested view method.
     for router in all_routers:
         for pattern, registered_viewset, base_name in router.registry:
             if registered_viewset is viewset:
                 return "-".join((base_name, view_action))
-    raise LookupError(f"{viewset} view not found")
+    raise LookupError(f"view {str(viewset)} for action {view_action} and pattern {str(pattern)} not found")
 
 
 def get_model_for_pulp_type(pulp_type, model):

@@ -57,6 +57,20 @@ def _validate_fs_export(content_artifacts):
         raise UnexportableArtifactException()
 
 
+# When exporting RPM/DEB packages we need to save original file time attributes
+def _set_package_utime(artifact, dest):
+    from pulp_rpm.app.models.package import Package as RPMPackage
+    from pulp_deb.app.models.content.content import Package as DEBPackage
+    for pkg_class in (RPMPackage, DEBPackage):
+        package = pkg_class.objects.filter(pkgId=artifact.sha256).first()  # .time_file
+        if package:
+            time_file = package.time_file
+            log.info(_(
+                "Updating timestamp for {dest}: {time_file}"
+            ).format(dest=dest, time_file=time_file))
+            os.utime(dest, (time_file, time_file))
+
+
 def _export_to_file_system(path, relative_paths_to_artifacts, method=FS_EXPORT_METHODS.WRITE):
     """
     Export a set of artifacts to the filesystem.
@@ -102,6 +116,7 @@ def _export_to_file_system(path, relative_paths_to_artifacts, method=FS_EXPORT_M
                     f.write(chunk)
         else:
             raise RuntimeError(_("Unsupported export method '{}'.").format(method))
+        _set_package_utime(artifact, dest)
 
 
 def _export_publication_to_file_system(
